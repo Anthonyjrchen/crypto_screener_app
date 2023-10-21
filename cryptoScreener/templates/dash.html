@@ -1,0 +1,100 @@
+{% extends "base_page.html" %}
+{% block content %}
+
+<script>
+  function verifyFunc(param) {
+    username = window.localStorage.getItem(window.localStorage.getItem("cur_token"));
+    $.ajax({
+      url:'/me/verify',
+      type:'GET',
+      headers:{"user":username,"data_name":param},
+      success:function(e) {
+        if (e) {
+          row_action()
+        } else {
+          console.log("false")
+        }
+      }
+    })
+  }
+  function row_action() {
+    alert("hello world")
+  }
+</script>
+<table id="display_table" class="ui selectable inverted celled table" style="height:100%;">
+    <thead class="full width">
+      <tr>
+        <th>Select</th>
+        <th>Data Name</th>
+        <th>Data Owner</th>
+        <th>Date Added</th>
+        <th>Request Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for data in datas %}
+      <tr>
+        <td class="center aligned collapsing">
+            <div class="ui toggle fitted inverted checkbox">
+                <input type="checkbox" id="checker">
+            </div>
+        </td>
+        <td id="row_name" name="row_name">{{data.data_name}}</td>
+        <td>{{data.author}}</td>
+        <td>{{data.date_added}}</td>
+        {% if data.data_name in requested_data and status_dict[data.data_name]=="Data Unlocked" %}
+        <td>Data Unlocked</td>
+        <td>
+          <div class="ui teal button" onclick="verifyFunc($(this).parent().siblings('#row_name').text())">
+            Run BEA
+          </div>
+        </td>
+        {% elif data.data_name in requested_data and status_dict[data.data_name]=="Permission Denied" %}
+        <td>Permission Denied</td>
+        <td>
+          <div class="ui teal disabled button">
+            Run BEA
+          </div>
+        </td>
+        {% elif data.data_name in requested_data and status_dict[data.data_name]=="Awaiting Seller Action" %}
+        <td>{{status_dict[data.data_name]}}</td>
+        <td>
+          <div class="ui teal disabled button">
+            Run BEA
+          </div>
+        </td>
+        {% elif data.data_name in requested_data and status_dict[data.data_name]=="Awaiting Buyer Action" %}
+        <td>{{status_dict[data.data_name]}}</td>
+        <td>
+          <div class="ui teal disabled button">
+            Run BEA
+          </div>
+        </td>
+        {% else %}
+        <td>Not Requested</td>
+        <td>
+          <div class="ui teal disabled button">
+            Run BEA
+          </div>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot class="full-width">
+        <tr>
+            <th class="center aligned">
+              <div class="ui teal toggle small fitted button" id="select_all_button" style="padding-left:15px; padding-right:15px; padding-top:10px">
+                All
+              </div>
+            </th>
+            <th colspan="5">
+            <div class="ui teal small button" id="request_button">
+                Request
+            </div>
+            </th>
+        </tr>
+    </tfoot>
+</table>
+{% endblock %}

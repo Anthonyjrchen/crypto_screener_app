@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+gunicorn
+jinja2
+python-multipart
+pandas
+sqlalchemy
+pydantic==1.10.12
+python-jose[cryptography]
+passlib[bcrypt]
+fastapi-jwt-auth[asymmetric]
+pycryptodome
+sympy

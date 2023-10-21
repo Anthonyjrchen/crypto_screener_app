@@ -1,0 +1,70 @@
+{% extends "fixed.html" %}
+
+{% block content %}
+
+<div class="ui main text container" style="flex:1">
+    <h1 class="ui header">
+        Log In
+    </h1>
+    <form class="ui form" id="login_form" name="login_form" method="post">
+        <div class="required field">
+          <label>Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter Username">
+        </div>
+        <div class="required field">
+          <label>Password</label>
+          <input type="text" id="password" name="password" placeholder="Enter Password">
+        </div>
+        <div class="field">
+            <a href="/signup">Don't have an account? Create an account.</a>
+        </div>
+        <div class="ui error message">
+          <div class="header">Incorrect Login</div>
+          <p>Username or password incorrect, please double check.</p>
+        </div>
+        <button class="ui teal button" type="submit">Submit</button>
+    </form>
+</div>
+<script>
+    $(document).ready(function() {
+        const loginform = document.querySelector('#login_form');
+        loginform.addEventListener("submit", function(e) {
+            e.preventDefault();
+            if(validInputs) {
+              var user_input = $('#username').val();
+              console.log(user_input);
+              var pass_input = $('#password').val();
+              console.log(pass_input);
+              var body = {
+                username: user_input,
+                password: pass_input,
+              };
+              $.ajax({
+                  url:'/login',
+                  type:'POST',
+                  contentType: 'application/x-www-form-urlencoded',
+                  data: body,
+                  dataType:'json',
+                  success: function(return_val) {
+                    console.log(body.msg);
+                    window.location.href="/dashboard"
+                  },
+                  error: function() {
+                    document.getElementById("login_form").className = "ui form error";
+                  }
+              })               
+            }
+          });
+
+        function validInputs() {
+            if (document.forms["login_form"]["username"].value == "") {
+                return false;
+            }
+            if (document.forms["login_form"]["password"].value == "") {
+                return false;
+            }
+        }
+    })
+</script>
+
+{% endblock %}

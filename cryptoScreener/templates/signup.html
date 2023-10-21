@@ -1,0 +1,90 @@
+{% extends "fixed.html" %}
+
+{% block content %}
+
+<div class="ui main text container" style="flex:1">
+    <h1 class="ui header">
+        Create an Account
+    </h1>
+    <form class="ui form" id="signup_form" name="signup_form" method="post">
+        <div class="required field">
+            <label>Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter Username">
+        </div>
+        <div class="required field">
+            <label>Password</label>
+            <input type="text" id="password" name="password" placeholder="Enter Password">
+        </div>
+        <div class="required field">
+            <label>Re-enter Password</label>
+            <input type="text" id="re_password" name="re_password" placeholder="Enter Password">
+        </div>
+        <div class="ui error message">
+          <div class="header">Sign up Error</div>
+          <p id="error_msg">You can only sign up for an account once with a given e-mail address.</p>
+        </div>
+        <button class="ui teal button" type="submit">Submit</button>
+      </form>
+</div>
+
+<script>
+  $(document).ready(function() {
+      const signupform = document.querySelector('#signup_form');
+      
+      signupform.addEventListener("submit", function(e) {
+        console.log("signupform func")
+        e.preventDefault();
+        validInputs();
+        });
+      function validInputs() {
+        console.log("entering validating stage now")
+        var errorCode = 0;
+        var errorOutput = "";
+        if ($('#username').val() == "") {
+          errorCode = 1;
+          errorOutput+="Username field cannot be empty.\n"
+        }
+        if ($('#password').val() == "") {
+          errorCode = 1;
+          errorOutput+="Password field cannot be empty.\n"
+        }
+        if ($('#password').val() != $('#re_password').val()) {
+          errorCode = 1;
+          errorOutput+="Passwords do not match.\n"
+        }
+
+        
+        
+        if (errorCode == 1) {
+          document.getElementById("signup_form").className = "ui form error";
+          document.getElementById("error_msg").innerHTML = errorOutput;
+          return false;
+        } else {
+          console.log("signupform func2")
+          var user_input = $('#username').val();
+          console.log(user_input);
+          var pass_input = $('#password').val();
+          console.log(pass_input);
+            $.ajax({
+                url:'/signup',
+                type:'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({"username": user_input, "password": pass_input}),
+                dataType: 'json',
+                success: function(return_val) {
+                    if(return_val == "True") {
+                        window.location="/";
+                    } else if(return_val == "False") {
+                        alert("User already exists");
+                        window.location.reload();
+                    } else {
+                        alert("no returned value");
+                    }
+                }
+            }) 
+        }
+      }
+  });
+</script>
+
+{% endblock %}

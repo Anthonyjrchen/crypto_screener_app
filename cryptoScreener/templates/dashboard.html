@@ -1,0 +1,89 @@
+{% extends "base_page.html" %}
+
+{% block content %}
+
+<script>
+    $(document).ready(function() {
+        $("#reset").click(function(){
+            $.ajax({
+                url:'/reset',
+                type:'POST'
+            })
+        })
+        $("#add_crypto").click(function() {
+            $('.ui.modal').modal('show');
+        })
+        $("#addPair").click(function(){
+            var pair = $("#pair").val();
+            console.log(pair)
+            var cryptoPair = pair.split(" ")
+            for (var i = 0; i < cryptoPair.length; i++) {
+                console.log(cryptoPair[i])
+
+                $.ajax({
+                    url: '/cryptocurrency',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({"symbol": cryptoPair[i]}),
+                    dataType: 'json'
+                })
+            }
+            $('.ui.modal').modal('hide')
+        })
+    });
+</script>
+<button id="add_crypto" class="ui right floated button">Add Cryptocurrency</button>
+<form>
+    <div class="ui input focus">
+        <input name="symbol" type="text" placeholder="Search...">
+    </div>
+    <button id="submit" class="ui primary button">
+        Search
+    </button>
+    
+    <table class="ui inverted celled table">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Price</th>
+            <th>Ma50</th>
+            <th>Ma200</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for crypto in cryptos %}
+          <tr>
+            <td>{{crypto.symbol}}</td>
+            <td>{{crypto.price}}</td>
+            <td>{{crypto.ma50}}</td>
+            <td>{{crypto.ma200}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    
+    
+      <div class="ui modal">
+        <i class="close icon"></i>
+        <div class="header">Header</div>
+        <div class="content">
+            <div class="ui form">
+                <div class="field">
+                    <label>Enter Cryptocurrency Pairs (Seperate pairs by empty space)</label>
+                    <input id="pair" type="text">
+                </div>
+            </div>
+        </div>
+        <div class="actions">
+            <div id="addPair" class="ui positive right labeled icon button">
+                Submit Pairs
+                <i class="plus icon"></i>
+            </div>
+        </div>
+      </div>    
+</form>
+
+  <button id="reset" class="ui negative basic button">Reset Database</button>
+  
+
+{% endblock %}
