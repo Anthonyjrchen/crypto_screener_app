@@ -4,6 +4,7 @@ gunicorn
 jinja2
 python-multipart
 pandas
+yfinance
 sqlalchemy
 pydantic==1.10.12
 python-jose[cryptography]

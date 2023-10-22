@@ -1,6 +1,5 @@
-from typing import List
 from cryptoScreener import models
-from fastapi import FastAPI, Request, UploadFile, File, Depends, HTTPException,status
+from fastapi import FastAPI, Request, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi_jwt_auth import AuthJWT
@@ -10,25 +9,23 @@ from fastapi.staticfiles import StaticFiles
 from cryptoScreener.database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
-from cryptoScreener.models import Data, Notification, Status, Token, Request_Status, Proof, Commitment
+from cryptoScreener.models import Data, Request_Status, Crypto
 from pydantic import BaseModel
-import pandas as pd
 import os
-import time
 from datetime import timedelta
 from passlib.context import CryptContext
 import random
-import uuid
+import yfinance
 
 class UserRequest(BaseModel):
     username: str
     password: str
 
-class DataRequest(BaseModel):
-    item: str
-
 class UsernameRequest(BaseModel):
     username: str
+
+class CryptoRequest(BaseModel):
+    symbol: str
 
 def get_db():
     try:
@@ -36,6 +33,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def fetch_crypto_data(id: int):
+    db = SessionLocal()
+    crypto = db.query(Crypto).filter(Crypto.id == id).first()
+    y_data = yfinance.Ticker(crypto.symbol)
+    crypto.ma200 = y_data.info['twoHundredDayAverage']   
+    crypto.ma50 = y_data.info['fiftyDayAverage']
+    crypto.price = y_data.info['previousClose']
+    db.add(crypto)
+    db.commit()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="cryptoScreener/static"), name="static")
@@ -151,7 +158,7 @@ async def dashboard(request: Request, db : Session = Depends(get_db), Authorize:
     Authorize.jwt_required()
     username = Authorize.get_jwt_subject()
     datas = db.query(Data).filter(Data.author!=username)
-    
+    cryptos = db.query(Crypto).filter(Crypto.user==username)
     token_list = db.query(models.Token).filter(models.Token.buyer_id==username).all()
     request_status_list = db.query(Request_Status.data_name,Request_Status.request_status).filter(Request_Status.requestor==username).all()
     status_dict = {}
@@ -166,7 +173,35 @@ async def dashboard(request: Request, db : Session = Depends(get_db), Authorize:
         "token_list":token_list,
         "requested_data":requested_data,
         "page_location":"Dash",
+        "cryptos": cryptos,
     })
+
+@app.post("/cryptocurrency")
+def create_crypto(crypto_request: CryptoRequest, db: Session = Depends(get_db), Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    username = Authorize.get_jwt_subject()
+    crypto = Crypto()
+    crypto.symbol = crypto_request.symbol
+    crypto.user = username
+    try:
+        print(crypto.symbol)
+        db.query(Crypto).filter(Crypto.symbol == crypto.symbol, Crypto.user == username).one()
+        print("raising error")
+        raise Exception("duplicate")
+    except NoResultFound:
+        db.add(crypto)
+        db.commit()
+        fetch_crypto_data(crypto.id)
+
+    return {
+        crypto_request.symbol + " added to database"
+    }
+
+@app.post("/reset/cryptocurrencies")
+def reset_db(db: Session = Depends(get_db), Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    db.query(Crypto).filter(Crypto.user==Authorize.get_jwt_subject()).delete(synchronize_session='fetch')
+    db.commit()
 
 @app.get("/user/priv_key")
 def get_priv_key(db : Session = Depends(get_db), Authorize: AuthJWT = Depends()):

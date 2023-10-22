@@ -6,8 +6,11 @@
     $(document).ready(function() {
         $("#reset").click(function(){
             $.ajax({
-                url:'/reset',
-                type:'POST'
+                url:'/reset/cryptocurrencies',
+                type:'POST',
+                success:function() {
+                    window.location.reload()
+                }
             })
         })
         $("#add_crypto").click(function() {
@@ -25,19 +28,27 @@
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({"symbol": cryptoPair[i]}),
-                    dataType: 'json'
+                    dataType: 'json',
+                    async:false,
+                    success: function() {
+                        window.location.reload()
+                    },
+                    error: function(e) {
+                        window.location.reload()
+                        alert("Duplicate detected")
+                    }
                 })
             }
             $('.ui.modal').modal('hide')
         })
     });
 </script>
-<button id="add_crypto" class="ui right floated button">Add Cryptocurrency</button>
+<button id="add_crypto" class="ui teal right floated button">Add Cryptocurrency</button>
 <form>
-    <div class="ui input focus">
+    <div class="ui teal input focus">
         <input name="symbol" type="text" placeholder="Search...">
     </div>
-    <button id="submit" class="ui primary button">
+    <button id="submit" class="ui teal button">
         Search
     </button>
     
@@ -70,12 +81,12 @@
             <div class="ui form">
                 <div class="field">
                     <label>Enter Cryptocurrency Pairs (Seperate pairs by empty space)</label>
-                    <input id="pair" type="text">
+                    <input id="pair" type="text" placeholder="E.g 'btc-usd' or 'eth-usd'">
                 </div>
             </div>
         </div>
         <div class="actions">
-            <div id="addPair" class="ui positive right labeled icon button">
+            <div id="addPair" class="ui teal right labeled icon button">
                 Submit Pairs
                 <i class="plus icon"></i>
             </div>
@@ -83,7 +94,7 @@
       </div>    
 </form>
 
-  <button id="reset" class="ui negative basic button">Reset Database</button>
-  
+  <button id="reset" class="ui negative button" style="background-color:#f54254;">Delete All</button>
+  <button id="reset" class="ui negative button" style="background-color:#f54254;">Delete Selected</button>
 
 {% endblock %}

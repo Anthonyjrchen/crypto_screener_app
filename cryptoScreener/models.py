@@ -79,7 +79,8 @@ class Crypto(Base):
     __tablename__ = "cryptos"
 
     id = Column(Integer, primary_key=True, index=True)
-    symbol = Column(String, unique=True, index = True)
+    symbol = Column(String, index = True)
     price = Column(Numeric(10,5))
     ma50 = Column(Numeric(10,5))
     ma200 = Column(Numeric(10,5))
+    user = Column(String)
